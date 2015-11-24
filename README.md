@@ -7,8 +7,7 @@ Summerwars is the view inspired by [Summerwars](https://www.youtube.com/watch?v=
 
 ## features
 - can display like summerwars
-- I don't think someone want to use this code
-- happy if this code make someone's help
+- I don't think someone want to use this code, happy if this code make someone's help
 
 ![sample](Screenshots/example01.gif)
 
