@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct Settings{
+public struct SummerwarsOptions{
     public static var maxLayerCount = 3 // 3 is property size for iOS.
     public static var warsMaxRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3
     public static var warsMinRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3 * 0.6

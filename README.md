@@ -7,9 +7,8 @@ Summerwars is the view inspired by [Summerwars](https://www.youtube.com/watch?v=
 
 ## features
 - can display like summerwars
-- I don't think someone want to use it
-- But happy if this code make someone's help
-- happy to know if some violation's there.
+- I don't think someone want to use this code
+- happy if this code make someone's help
 
 ![sample](Screenshots/example01.gif)
 
@@ -26,14 +25,29 @@ example project would be easy to understand.
 	
 ```swift
 var contents = [WarsContent]()
-
 for _ in 0..<30{
-let image = UIImage(named: "image\(Int.random(max: 17)).jpg") ?? UIImage()
-        contents.append(WarsContent(image:image, caption: captions[Int.random(max: captions.count - 1)]))
+        let image = UIImage(named: "someimageYouWantToShow")
+        let caption = "hello world"
+        contents.append(WarsContent(image:image, caption: caption))
 }
 
 let summerWarsView = SummerWarsViewController(contents: contents)
 addChildViewController(summerWarsView, toContainerView: view)
+```
+
+##Options
+you can customize with some options
+```
+public struct SummerwarsOptions{
+        // circle layer count
+        public static var maxLayerCount 
+        // one's max radius
+        public static var warsMaxRadius:CGFloat 
+        // one's min radius
+        public static var warsMinRadius:CGFloat
+        // one's central space radius
+        public static var warsCentralRadius:CGFloat 
+}
 ```
 
 ## License
