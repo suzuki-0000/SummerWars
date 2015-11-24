@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8942BAA31BF9DB1800DA5F07 /* SummerWars.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 8942BAA21BF9DB1800DA5F07 /* SummerWars.bundle */; };
 		898604301BFDA7630057D3B6 /* RandomColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8986042C1BFDA7630057D3B6 /* RandomColor.swift */; };
 		898604311BFDA7630057D3B6 /* ColorDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8986042D1BFDA7630057D3B6 /* ColorDefinition.swift */; };
 		898604321BFDA7630057D3B6 /* Luminosity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8986042E1BFDA7630057D3B6 /* Luminosity.swift */; };
@@ -17,7 +16,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		8942BAA21BF9DB1800DA5F07 /* SummerWars.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = SummerWars.bundle; sourceTree = "<group>"; };
 		8986042C1BFDA7630057D3B6 /* RandomColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RandomColor.swift; sourceTree = "<group>"; };
 		8986042D1BFDA7630057D3B6 /* ColorDefinition.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorDefinition.swift; sourceTree = "<group>"; };
 		8986042E1BFDA7630057D3B6 /* Luminosity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Luminosity.swift; sourceTree = "<group>"; };
@@ -73,7 +71,6 @@
 				89CA0C7C1BF1F0EE005D5F7D /* SummerWars.h */,
 				89CA0C7E1BF1F0EE005D5F7D /* Info.plist */,
 				89CA0CAA1BF1F13D005D5F7D /* SummerWars.swift */,
-				8942BAA21BF9DB1800DA5F07 /* SummerWars.bundle */,
 			);
 			path = SummerWars;
 			sourceTree = "<group>";
@@ -146,7 +143,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8942BAA31BF9DB1800DA5F07 /* SummerWars.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

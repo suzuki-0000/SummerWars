@@ -10,16 +10,22 @@ import UIKit
 import SummerWars
 
 class ViewController: UIViewController {
-	let bundle = NSBundle(forClass: SummerWarsViewController.self)
-
+	var captions = ["Lorem Ipsum.",
+		"it to make a type specimen book.",
+		"It has survived not typesetting",
+		"remaining of Lorem Ipsum.",
+		"simply dummy text of the printing and typesetting industry.",
+		"text ever since the 1500s"
+	]
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
 		var contents = [WarsContent]()
 		
 		for _ in 0..<30{
-        	let image = UIImage(named: "SummerWars.bundle/images/image\(Int.random(max: 17)).jpg", inBundle: bundle, compatibleWithTraitCollection: nil) ?? UIImage()
-			contents.append(WarsContent(image:image, caption: ""))
+        	let image = UIImage(named: "image\(Int.random(max: 17)).jpg") ?? UIImage()
+			contents.append(WarsContent(image:image, caption: captions[Int.random(max: captions.count - 1)]))
 		}
 		
 		let summerWarsView = SummerWarsViewController(contents: contents)

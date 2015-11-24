@@ -9,10 +9,10 @@
 import UIKit
 
 public struct Settings{
-    public static var maxViewCount = 30
-    public static var maxLayerCount = 3 // 3 is property size using with eyes for iOS.
-    public static var warsRadius:CGFloat = WarsView.getWarsRadius()
-    public static var warsCentralRadius:CGFloat = WarsView.getWarsRadius() * 0.3 // 0.3 is property size using with eyes for iOS.
+    public static var maxLayerCount = 3 // 3 is property size for iOS.
+    public static var warsMaxRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3
+    public static var warsMinRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3 * 0.6
+    public static var warsCentralRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3 * 0.3 // 0.3 is property size using with eyes for iOS.
 }
 
 public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
@@ -23,15 +23,8 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	var summerwarsViews = [WarsView]()
 	var warsContents = [WarsContent]()
 	
-	private var isInitializedViews = false
-	private var isReadyToAnimateEvents = true
 	private var isDraggingSpace = false
-	private var viewCount: Int {
-		if warsContents.count > 0 {
-			return warsContents.count
-		}
-		return Settings.maxViewCount
-	}
+	private var viewCount: Int { return warsContents.count }
 	
 	public required init?(coder aDecoder: NSCoder) {
 	    fatalError("init(coder:) has not been implemented")
@@ -54,20 +47,15 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		super.viewDidLoad()
 		
 		// call home view first.
-		setupHomeView()
-		// setup for animation
-		isInitializedViews = true
-		animateEventsForAppear()
+		createSummerwars()
+		showSummerwars()
 	}
 	
 	public override func viewWillAppear(animated: Bool) {
 		super.viewWillAppear(true)
-		
-		// for animation
-		isReadyToAnimateEvents = true
 	}
 	
-	private func setupHomeView() {
+	private func createSummerwars() {
 		// create scrollview
 		summerwarsScrollView = SummerwarsScrollView(frame: CGRectMake(0, 0, view.frame.width, view.frame.height))
 		summerwarsScrollView.delegate = self
@@ -88,7 +76,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	func createHomeSpace() {
 		
 		// create virtual view dynamically
-		let layerCount = getLayerCountByRoomCount(viewCount)
+		let layerCount = getLayerCountByCount(viewCount)
 		let lastLayerRadius = getLayerRadius(layerCount + 1) // + 1 is for space for outer
 		
 		// calcrate dynamic space size. (diameter of mexlayer) + outer white space
@@ -111,46 +99,43 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		summerwarsScrollView.setContentOffset(CGPointMake(upLeftX, upLeftY), animated: false)
 		summerwarsScrollView.addSubview(summerwarsOprationView)
 		
-		var roomCountIndex = 0
-		// layerCount is calcurated by event count
+		var warCountIndex = 0
 		// 1. loop layercount which is calcurated by event.count, request from server ( eg. 1.2.3.. 15 )
-		// 2. loop roomCount for each layer whici is calculated by layer. (eg. 3, 7, 14..)
+		// 2. loop layerLimitCount for each layer whici is calculated by layer. (eg. 3, 7, 14..)
 		for layerIndex in 0...layerCount {
-			// get room count for each layer
-			let currentLayerOfMaxRoomCount = getMaxRoomCountOfLayer(layerIndex)
+			// get war count for each layer
+			let currentLayerOfMaxWarCount = getMaxCountOfLayer(layerIndex)
 			let currentLayerRadius = getLayerRadius(layerIndex)
 			
-			var roomCountOfLayer:Int!
+			var layerLimitCount:Int!
 			if layerIndex == layerCount{
-				// count room if it is last layer
-				roomCountOfLayer = viewCount - roomCountIndex
+				// count war if it is last layer
+				layerLimitCount = viewCount - warCountIndex
 			} else {
-				// not the end of layer, apply max room count
-				roomCountOfLayer = currentLayerOfMaxRoomCount
+				// not the end of layer, apply max war count
+				layerLimitCount = currentLayerOfMaxWarCount
 			}
 			
-			// 2π / roomcount = theta.
-			let theta = 2.0 * M_PI / Double(roomCountOfLayer)
+			// 2π / layerLimitCount = theta.
+			let theta = 2.0 * M_PI / Double(layerLimitCount)
 			// this is for random views
 			let diffTheta: Double = Double( rand() / 10 ) / 10.0
 			
-			for eventPoint in 0..<roomCountOfLayer {
+			for warsPoint in 0..<layerLimitCount {
 				
 				// pin [x/y] center point from cos(theta * hypotenuse of event point), sin(theta * hypotenuse)
-				let centerX = centerVirtualSpace.x + currentLayerRadius * CGFloat(cos(diffTheta + theta * Double(eventPoint)))
-				let centerY = centerVirtualSpace.y + currentLayerRadius * CGFloat(sin(diffTheta + theta * Double(eventPoint)))
+				let centerX = centerVirtualSpace.x + currentLayerRadius * CGFloat(cos(diffTheta + theta * Double(warsPoint)))
+				let centerY = centerVirtualSpace.y + currentLayerRadius * CGFloat(sin(diffTheta + theta * Double(warsPoint)))
 				
-				let r = getLayerRadiusByRoomSize(Int.random(max: getMaxRoomSizeOfMaxCircleRadius()))
+				let r = getLayerRadiusBySize(Int.random(max: getMaxWarSizeOfMaxCircleRadius()))
 				let summerwarsView = WarsView()
 				summerwarsView.frame = CGRectMake(0.0, 0.0, r*2.0, r*2.0)
 				summerwarsView.center = CGPointMake(centerX, centerY)
 				
 				// image
 				if warsContents.count > 0 {
-					let image = warsContents[roomCountIndex]
+					let image = warsContents[warCountIndex]
     				summerwarsView.setWar(image)
-				} else {
-    				summerwarsView.setWar()
 				}
 				
 				// add to local cache
@@ -159,7 +144,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 				// add to view
 				summerwarsOprationView.addSubview(summerwarsView)
 				
-				roomCountIndex++
+				warCountIndex++
 			}
 		}
 		
@@ -172,46 +157,45 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		}
 	}
 	
-	func getLayerCountByRoomCount(roomCount:Int) ->Int {
-		var sumMaxRoomCount = 0
+	func getLayerCountByCount(warCount:Int) ->Int {
+		var sumMaxWarCount = 0
 		for layerIndex in 0...Settings.maxLayerCount {
-			let maxRoomCountOfLayer = getMaxRoomCountOfLayer(layerIndex)
-			sumMaxRoomCount += maxRoomCountOfLayer
-			if(roomCount <= sumMaxRoomCount) {
+			let maxWarCountOfLayer = getMaxCountOfLayer(layerIndex)
+			sumMaxWarCount += maxWarCountOfLayer
+			if(warCount <= sumMaxWarCount) {
 				return layerIndex
 			}
 		}
 		return Settings.maxLayerCount
 	}
 	
-	func getMaxRoomCountOfLayer(layerIndex:Int) ->Int {
+	func getMaxCountOfLayer(layerIndex:Int) ->Int {
 		// calculate length of radius from center
 		let layerRadius = getLayerRadius(layerIndex)
 		
 		// length of from space to space
-		let lengthFromEventToEvent = Settings.warsRadius * 2
+		let lengthFromEventToEvent = Settings.warsMaxRadius * 2
 		let lengthOfCircle: CGFloat = 2.0 * CGFloat(M_PI) * layerRadius
-		let maxRoomCount = lengthOfCircle / lengthFromEventToEvent
+		let maxWarCount = lengthOfCircle / lengthFromEventToEvent
 		
-		return Int(floor(maxRoomCount))
+		return Int(floor(maxWarCount))
 	}
 	
 	func getLayerRadius(layerIndex : Int) -> CGFloat{
 		// find numer of radius from layerIndex (eg. 1, 2, 3)
 		let numberOfRadius:CGFloat = 2.0 * CGFloat(layerIndex) + 1.0
-		let outerRadius:CGFloat  = Settings.warsRadius * numberOfRadius
+		let outerRadius:CGFloat  = Settings.warsMaxRadius * numberOfRadius
 		
 		return Settings.warsCentralRadius + outerRadius
 	}
 	
-	// "room size" is not people count. size is defined at server. eg. 1,2,3..
-	func getLayerRadiusByRoomSize(roomSize:Int) ->CGFloat {
-		let max = WarsView.getMaxCircleRadius()
-		let min = WarsView.getMinCircleRadius()
+	func getLayerRadiusBySize(warSize:Int) ->CGFloat {
+		let max = Settings.warsMaxRadius
+		let min = Settings.warsMinRadius
 		
 		var radius:CGFloat!
-		if(roomSize < getMaxRoomSizeOfMaxCircleRadius()){
-			radius = min + (max - min) * ( CGFloat(roomSize)*1.5 / CGFloat(getMaxRoomSizeOfMaxCircleRadius()))
+		if(warSize < getMaxWarSizeOfMaxCircleRadius()){
+			radius = min + (max - min) * ( CGFloat(warSize)*1.5 / CGFloat(getMaxWarSizeOfMaxCircleRadius()))
 		}
 		else {
 			radius = max
@@ -219,31 +203,23 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		return radius
 	}
 	
-	func getMaxRoomSizeOfMaxCircleRadius() ->Int {
+	func getMaxWarSizeOfMaxCircleRadius() ->Int {
 		return 10
 	}
 	
 	// MARK: - Animate
-	func animateEventsForAppear(){
-		if isReadyToAnimateEvents {
-			isReadyToAnimateEvents = false
-			UIView.animateWithDuration(0.8, delay: 1, options: .CurveEaseInOut,
-				animations:  {[weak self]() -> () in
-					if let _self = self {
-						_self.summerwarsOprationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
-						_self.summerwarsOprationView.alpha = 1.0
-					}
-				},
-				completion: {[weak self](bool: Bool) -> () in
-					if let _self = self {
-						_self.isReadyToAnimateEvents = true
-					}
-				}
-			)
-		}
+	func showSummerwars(){
+		UIView.animateWithDuration(0.8, delay: 2, options: .CurveEaseInOut,
+			animations:  {
+				self.summerwarsOprationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
+				self.summerwarsOprationView.alpha = 1.0
+			},
+			completion: {(bool: Bool) -> () in
+			}
+		)
 	}
 	
-	// MARK: - UIScrollView Delpublic egate
+	// MARK: - UIScrollView delegate
 	public func scrollViewDidScroll(scrollView: UIScrollView) {
 		// get contentOffset
 		let offsetPoint:CGPoint = scrollView.contentOffset
@@ -290,7 +266,7 @@ public class WarsContent {
 	public var image = UIImage()
 	public var caption = ""
 	
-	public init(image:UIImage, caption:String = ""){
+	public init(image:UIImage, caption:String = "hello"){
 		self.image = image
 		self.caption = caption
 	}
@@ -299,12 +275,11 @@ public class WarsContent {
 
 public class WarsView: UIView{
 	
-	// UI
 	var baseView: UIView!
-	var eventImageView : UIImageView!
-	var eventTitleLabel = UILabel()
-	var eventTitleLabelBackground = UIControl()
-	var eventColor:UIColor!
+	var warImageView : UIImageView!
+	var warTitleLabel = UILabel()
+	var warTitleLabelBackground = UIControl()
+	var warColor:UIColor!
 	var isFocus = false
 	
 	public required init(coder aDecoder: NSCoder) {
@@ -315,23 +290,8 @@ public class WarsView: UIView{
 		super.init(frame: frame)
 	}
 	
-	static func getMaxCircleRadius() -> CGFloat {
-		return UIScreen.mainScreen().bounds.size.width * 0.3
-	}
-	
 	static func getMinCircleRadius() -> CGFloat {
-		return getMaxCircleRadius() * 0.6
-	}
-	
-	static func getWarsRadius() -> CGFloat {
-		return getMaxCircleRadius()
-	}
-	
-	// for example
-	func setWar(){
-		let bundle = NSBundle(forClass: SummerWarsViewController.self)
-		let image = UIImage(named: "SummerWars.bundle/images/image\(Int.random(max: 17)).jpg", inBundle: bundle, compatibleWithTraitCollection: nil) ?? UIImage()
-		setWar(image, caption: "hello world.")
+		return Settings.warsMaxRadius * 0.6
 	}
 	
 	func setWar(content: WarsContent) {
@@ -341,57 +301,58 @@ public class WarsView: UIView{
 	func setWar(image:UIImage, caption:String){
 		// setup layout
 		opaque = false
-		eventColor = randomColor(luminosity: .Light)
+		warColor = randomColor(luminosity: .Light)
 		
 		// base view for add view
 		baseView = UIView(frame: frame)
 		baseView.center = CGPointMake(frame.width/2, frame.height/2)
-		baseView.backgroundColor = eventColor
+		baseView.backgroundColor = warColor
 		baseView.layer.cornerRadius = frame.width/2
 		baseView.layer.masksToBounds = true
 		
-		// add video image view
-		eventImageView = UIImageView(frame: CGRectMake(0, 0, frame.width, frame.height*0.42))
-		eventImageView.center = CGPointMake(frame.width/2, frame.height/2)
-		eventImageView.contentMode = .ScaleAspectFill
-		eventImageView.clipsToBounds = true
-		eventImageView.image = image
-		baseView.addSubview(eventImageView)
+		// add image view
+		warImageView = UIImageView(frame: CGRectMake(0, 0, frame.width, frame.height*0.42))
+		warImageView.center = CGPointMake(frame.width/2, frame.height/2)
+		warImageView.contentMode = .ScaleAspectFill
+		warImageView.clipsToBounds = true
+		warImageView.image = image
+		baseView.addSubview(warImageView)
 		
-		// calcurate image size after completion.
-		let imageViewWidth = eventImageView.frame.width
-		let imageHeight = eventImageView.frame.height
+		// calcurate image for title
+		let imageViewWidth = warImageView.frame.width
+		let imageHeight = warImageView.frame.height
 		let eventTitleMargin:CGFloat = 18
 		
-		// eventTitleLabel
-		eventTitleLabel = UILabel(frame: CGRectMake(0, 0,
+		// warTitleLabel
+		warTitleLabel = UILabel(frame: CGRectMake(0, 0,
 			imageViewWidth - eventTitleMargin, imageHeight))
-		eventTitleLabel.center = CGPointMake(eventImageView.center.x, eventTitleLabel.center.y )
-		eventTitleLabel.text = caption
-		eventTitleLabel.textColor = .whiteColor()
-		eventTitleLabel.textAlignment = .Center
-		eventTitleLabel.lineBreakMode = .ByWordWrapping
-		eventTitleLabel.numberOfLines = 2
+		warTitleLabel.center = CGPointMake(warImageView.center.x, warTitleLabel.center.y )
+		debugPrint(caption)
+		warTitleLabel.text = caption
+		warTitleLabel.textColor = .whiteColor()
+		warTitleLabel.textAlignment = .Center
+		warTitleLabel.lineBreakMode = .ByWordWrapping
+		warTitleLabel.numberOfLines = 2
 		
-		// eventTitleLabel Background
-		eventTitleLabelBackground = UIControl()
-		eventTitleLabelBackground.backgroundColor = UIColor(red:0.0,green:0.0,blue:0.0,alpha:0.5)
-		eventTitleLabelBackground.frame = CGRectMake(0, 0, imageViewWidth, imageHeight)
-		eventTitleLabelBackground.center = CGPointMake(eventImageView.center.x, eventImageView.center.y)
+		// warTitleLabel Background
+		warTitleLabelBackground = UIControl()
+		warTitleLabelBackground.backgroundColor = UIColor(red:0.0,green:0.0,blue:0.0,alpha:0.2)
+		warTitleLabelBackground.frame = CGRectMake(0, 0, imageViewWidth, imageHeight)
+		warTitleLabelBackground.center = CGPointMake(warImageView.center.x, warImageView.center.y)
 		
-		eventTitleLabelBackground.addSubview(eventTitleLabel)
-		baseView.addSubview(eventTitleLabelBackground)
+		warTitleLabelBackground.addSubview(warTitleLabel)
+		baseView.addSubview(warTitleLabelBackground)
 		
 		addSubview(baseView)
 	}
 	
-	// MARK: - Animate Function
-func doFocus() {
+    // MARK: - Animate Function
+    func doFocus() {
 		if !isFocus {
 			isFocus = true
     		UIView.animateWithDuration(0.2, animations: {() -> Void in
-    			self.eventTitleLabel.alpha = 0.0
-    			self.eventTitleLabelBackground.alpha = 0.0
+    			self.warTitleLabel.alpha = 0.0
+    			self.warTitleLabelBackground.alpha = 0.0
     			}, completion: {(Bool) -> () in
     		})
 		}
@@ -401,8 +362,8 @@ func doFocus() {
 		if isFocus {
 			isFocus = false
     		UIView.animateWithDuration(1.0, animations: {() -> Void in
-    			self.eventTitleLabel.alpha = 1.0
-    			self.eventTitleLabelBackground.alpha = 1.0
+    			self.warTitleLabel.alpha = 1.0
+    			self.warTitleLabelBackground.alpha = 1.0
     			}, completion: {(Bool) -> () in
     		})
 		}
