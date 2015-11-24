@@ -8,40 +8,49 @@
 
 import UIKit
 
-public class SummerWarsView: UIViewController, UIScrollViewDelegate {
+public struct Settings{
+    public static var maxViewCount = 30
+    public static var maxLayerCount = 3 // 3 is property size using with eyes for iOS.
+    public static var warsRadius:CGFloat = WarsView.getWarsRadius()
+    public static var warsCentralRadius:CGFloat = WarsView.getWarsRadius() * 0.3 // 0.3 is property size using with eyes for iOS.
+}
+
+public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	
-	// UI: home
+	
 	var summerwarsScrollView: SummerwarsScrollView!
 	var summerwarsOprationView: UIView = UIView() // initialized in first.
 	var summerwarsViews = [WarsView]()
+	var warsContents = [WarsContent]()
 	
-	let maxViewCount = 30
-	let maxLayerCount = 3 // 3 is property size using with eyes for iOS.
-	let eventRadius:CGFloat = WarsView.getEventRadius()
-	let innerRadius:CGFloat = WarsView.getEventRadius() * 0.3 // 0.3 is property size using with eyes for iOS.
-	let operableZoomScale:CGFloat = 0.65
-	var focusArea = (width: CGFloat(0.0), height: CGFloat(0.0))
-	var summerwarsScrollViewScale: CGFloat = 1.0
+	private var isInitializedViews = false
+	private var isReadyToAnimateEvents = true
+	private var isDraggingSpace = false
+	private var viewCount: Int {
+		if warsContents.count > 0 {
+			return warsContents.count
+		}
+		return Settings.maxViewCount
+	}
 	
-	// property
-	var isInitializedViews = false
-	var isReadyToAnimateEvents = true
-	var isDraggingSpace = false
-	
-	required public init?(coder aDecoder: NSCoder) {
+	public required init?(coder aDecoder: NSCoder) {
 	    fatalError("init(coder:) has not been implemented")
 	}
 	
-	convenience init() {
+	public convenience init() {
 		self.init(nibName: nil, bundle: nil)
 	}
 	
-	override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
-		super.init(nibName: nil, bundle: nil)
-		setup()
+	public convenience init(contents:[WarsContent]) {
+		self.init(nibName: nil, bundle: nil)
+		self.warsContents = contents
 	}
 	
-	override public func viewDidLoad() {
+	public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
+		super.init(nibName: nil, bundle: nil)
+	}
+	
+	public override func viewDidLoad() {
 		super.viewDidLoad()
 		
 		// call home view first.
@@ -49,10 +58,6 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		// setup for animation
 		isInitializedViews = true
 		animateEventsForAppear()
-	}
-	
-	private func setup() {
-		
 	}
 	
 	public override func viewWillAppear(animated: Bool) {
@@ -76,9 +81,6 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		
 		view.addSubview(summerwarsScrollView)
 		
-		// add focus area for animate
-		focusArea = (width: summerwarsScrollView.frame.width * 0.4, height: summerwarsScrollView.frame.height * 0.4)
-		
 		// create home space.
 		createHomeSpace()
 	}
@@ -86,7 +88,7 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	func createHomeSpace() {
 		
 		// create virtual view dynamically
-		let layerCount = getLayerCountByRoomCount(maxViewCount)
+		let layerCount = getLayerCountByRoomCount(viewCount)
 		let lastLayerRadius = getLayerRadius(layerCount + 1) // + 1 is for space for outer
 		
 		// calcrate dynamic space size. (diameter of mexlayer) + outer white space
@@ -102,8 +104,8 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		let upLeftY = virtualSpaceSize/2 - summerwarsScrollView.frame.height/2
 		
 		summerwarsOprationView = UIView(frame: CGRectMake(0, 0, virtualSpaceSize, virtualSpaceSize))
-		summerwarsOprationView.transform = CGAffineTransformMakeScale(0.3, 0.3)
-		summerwarsOprationView.alpha = 0.5
+		summerwarsOprationView.transform = CGAffineTransformMakeScale(0.0, 0.0)
+		summerwarsOprationView.alpha = 0.1
 		
 		summerwarsScrollView.contentSize = summerwarsOprationView.bounds.size
 		summerwarsScrollView.setContentOffset(CGPointMake(upLeftX, upLeftY), animated: false)
@@ -121,7 +123,7 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 			var roomCountOfLayer:Int!
 			if layerIndex == layerCount{
 				// count room if it is last layer
-				roomCountOfLayer = maxViewCount - roomCountIndex
+				roomCountOfLayer = viewCount - roomCountIndex
 			} else {
 				// not the end of layer, apply max room count
 				roomCountOfLayer = currentLayerOfMaxRoomCount
@@ -138,20 +140,18 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 				let centerX = centerVirtualSpace.x + currentLayerRadius * CGFloat(cos(diffTheta + theta * Double(eventPoint)))
 				let centerY = centerVirtualSpace.y + currentLayerRadius * CGFloat(sin(diffTheta + theta * Double(eventPoint)))
 				
-				// image
-				let bundle = NSBundle(forClass: SummerWarsView.self)
-				let image = UIImage(named: "SummerWars.bundle/images/image\(Int.random(max: 17)).jpg", inBundle: bundle, compatibleWithTraitCollection: nil) ?? UIImage()
-				
 				let r = getLayerRadiusByRoomSize(Int.random(max: getMaxRoomSizeOfMaxCircleRadius()))
 				let summerwarsView = WarsView()
 				summerwarsView.frame = CGRectMake(0.0, 0.0, r*2.0, r*2.0)
 				summerwarsView.center = CGPointMake(centerX, centerY)
-				summerwarsView.setEvent(image)
 				
-				//create transParent Button For segue
-				let btn = UIButton(frame: CGRectMake(0.0, 0.0, summerwarsView.frame.width, summerwarsView.frame.height))
-				btn.addTarget(self, action: "startWars:", forControlEvents: .TouchUpInside)
-				summerwarsView.addSubview(btn)
+				// image
+				if warsContents.count > 0 {
+					let image = warsContents[roomCountIndex]
+    				summerwarsView.setWar(image)
+				} else {
+    				summerwarsView.setWar()
+				}
 				
 				// add to local cache
 				summerwarsViews.append(summerwarsView)
@@ -174,14 +174,14 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	
 	func getLayerCountByRoomCount(roomCount:Int) ->Int {
 		var sumMaxRoomCount = 0
-		for layerIndex in 0...maxLayerCount {
+		for layerIndex in 0...Settings.maxLayerCount {
 			let maxRoomCountOfLayer = getMaxRoomCountOfLayer(layerIndex)
 			sumMaxRoomCount += maxRoomCountOfLayer
 			if(roomCount <= sumMaxRoomCount) {
 				return layerIndex
 			}
 		}
-		return maxLayerCount
+		return Settings.maxLayerCount
 	}
 	
 	func getMaxRoomCountOfLayer(layerIndex:Int) ->Int {
@@ -189,9 +189,8 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		let layerRadius = getLayerRadius(layerIndex)
 		
 		// length of from space to space
-		let lengthFromEventToEvent = eventRadius * 2
+		let lengthFromEventToEvent = Settings.warsRadius * 2
 		let lengthOfCircle: CGFloat = 2.0 * CGFloat(M_PI) * layerRadius
-		
 		let maxRoomCount = lengthOfCircle / lengthFromEventToEvent
 		
 		return Int(floor(maxRoomCount))
@@ -200,9 +199,9 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	func getLayerRadius(layerIndex : Int) -> CGFloat{
 		// find numer of radius from layerIndex (eg. 1, 2, 3)
 		let numberOfRadius:CGFloat = 2.0 * CGFloat(layerIndex) + 1.0
-		let outerRadius:CGFloat  = eventRadius * numberOfRadius
+		let outerRadius:CGFloat  = Settings.warsRadius * numberOfRadius
 		
-		return innerRadius + outerRadius
+		return Settings.warsCentralRadius + outerRadius
 	}
 	
 	// "room size" is not people count. size is defined at server. eg. 1,2,3..
@@ -228,7 +227,7 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	func animateEventsForAppear(){
 		if isReadyToAnimateEvents {
 			isReadyToAnimateEvents = false
-			UIView.animateWithDuration( 0.8, delay: 0, options: UIViewAnimationOptions.CurveEaseInOut,
+			UIView.animateWithDuration(0.8, delay: 1, options: .CurveEaseInOut,
 				animations:  {[weak self]() -> () in
 					if let _self = self {
 						_self.summerwarsOprationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
@@ -237,7 +236,6 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 				},
 				completion: {[weak self](bool: Bool) -> () in
 					if let _self = self {
-						_self.animateIfFocus()
 						_self.isReadyToAnimateEvents = true
 					}
 				}
@@ -245,29 +243,8 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		}
 	}
 	
-	func animateIfFocus() {
-		if isInitializedViews && !isDraggingSpace {
-			// center[X,Y] is dynamical center position.
-			let centerX = (summerwarsScrollView.bounds.origin.x + summerwarsScrollView.frame.width)/summerwarsScrollViewScale
-			let centerY = (summerwarsScrollView.bounds.origin.y + summerwarsScrollView.frame.height)/summerwarsScrollViewScale
-			
-			for v in summerwarsViews {
-				
-				// absolute distance from event point
-				let dx = abs(centerX - v.center.x)
-				let dy = abs(centerY - v.center.y)
-				
-				if(dx < focusArea.width/summerwarsScrollViewScale && dy < focusArea.height/summerwarsScrollViewScale){
-				} else {
-				}
-			}
-		}
-	}
-	
 	// MARK: - UIScrollView Delpublic egate
 	public func scrollViewDidScroll(scrollView: UIScrollView) {
-		animateIfFocus()
-		
 		// get contentOffset
 		let offsetPoint:CGPoint = scrollView.contentOffset
 		
@@ -286,11 +263,6 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	
 	public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
 		return summerwarsOprationView
-	}
-	
-	public func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
-		//set zoomingScale
-		summerwarsScrollViewScale = scale
 	}
 	
 	public func scrollViewWillBeginDragging(scrollView: UIScrollView) {
@@ -312,57 +284,20 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 			v.undoFocus()
 		}
 	}
-	
-	let transitionManager = TransitionManager()
-	public func startWars(button:UIButton){
-		guard let warsView = button.superview as? WarsView else {
-			return
-		}
-		// hello 
-		let vc = SummerwarsSecondViewController()
-		vc.warsView = warsView
-		vc.transitioningDelegate = transitionManager
-		transitionManager.warsView = warsView
-		transitionManager.parentView = summerwarsScrollView
-		
-		presentViewController(vc, animated: true, completion: {})
-	}
 }
 
-class SummerwarsSecondViewController:UIViewController{
+public class WarsContent {
+	public var image = UIImage()
+	public var caption = ""
 	
-	var warsView: WarsView!
-	
-	required init?(coder aDecoder: NSCoder) {
-	    fatalError("init(coder:) has not been implemented")
-	}
-
-	override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
-		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+	public init(image:UIImage, caption:String = ""){
+		self.image = image
+		self.caption = caption
 	}
 	
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		
-		view.backgroundColor = warsView.eventColor
-		
-		let imageView = UIImageView(frame: CGRectMake(0, 0, UIScreen.mainScreen().bounds.width, warsView.frame.height))
-		imageView.center = CGPointMake(view.frame.width/2, view.frame.height/2)
-		imageView.image = warsView.eventImageView.image
-		view.addSubview(imageView)
-		
-		let dismissButton = UIButton()
-		dismissButton.frame = CGRectMake(0, 0, 40, 40)
-		dismissButton.addTarget(self, action: "dismissButton:", forControlEvents: .TouchUpInside)
-		view.addSubview(dismissButton)
-	}
-	
-	public func dismissButton(btn: UIButton){
-		dismissViewControllerAnimated(true, completion: {})
-	}
 }
 
-class WarsView: UIView{
+public class WarsView: UIView{
 	
 	// UI
 	var baseView: UIView!
@@ -372,29 +307,38 @@ class WarsView: UIView{
 	var eventColor:UIColor!
 	var isFocus = false
 	
-	required init(coder aDecoder: NSCoder) {
+	public required init(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)!
 	}
 	
-	override init(frame: CGRect) {
+	public override init(frame: CGRect) {
 		super.init(frame: frame)
 	}
 	
-	class func getMaxCircleRadius() -> CGFloat {
+	static func getMaxCircleRadius() -> CGFloat {
 		return UIScreen.mainScreen().bounds.size.width * 0.3
 	}
 	
-	class func getMinCircleRadius() -> CGFloat {
+	static func getMinCircleRadius() -> CGFloat {
 		return getMaxCircleRadius() * 0.6
 	}
 	
-	class func getEventRadius() -> CGFloat {
+	static func getWarsRadius() -> CGFloat {
 		return getMaxCircleRadius()
 	}
 	
-	// MARK: - add to layout
-	func setEvent(image: UIImage) {
-		
+	// for example
+	func setWar(){
+		let bundle = NSBundle(forClass: SummerWarsViewController.self)
+		let image = UIImage(named: "SummerWars.bundle/images/image\(Int.random(max: 17)).jpg", inBundle: bundle, compatibleWithTraitCollection: nil) ?? UIImage()
+		setWar(image, caption: "hello world.")
+	}
+	
+	func setWar(content: WarsContent) {
+		setWar(content.image, caption: content.caption)
+	}
+	
+	func setWar(image:UIImage, caption:String){
 		// setup layout
 		opaque = false
 		eventColor = randomColor(luminosity: .Light)
@@ -423,7 +367,7 @@ class WarsView: UIView{
 		eventTitleLabel = UILabel(frame: CGRectMake(0, 0,
 			imageViewWidth - eventTitleMargin, imageHeight))
 		eventTitleLabel.center = CGPointMake(eventImageView.center.x, eventTitleLabel.center.y )
-		eventTitleLabel.text = "Hello world."
+		eventTitleLabel.text = caption
 		eventTitleLabel.textColor = .whiteColor()
 		eventTitleLabel.textAlignment = .Center
 		eventTitleLabel.lineBreakMode = .ByWordWrapping
@@ -486,8 +430,8 @@ class SummerwarsScrollView: UIScrollView {
 	}
 	
 	private var cell: CAEmitterCell!
+	private var shapes = ["star", "oval", "polygon", "triangle"]
 	
-	//http://breaktimes.hatenablog.com/entry/2015/05/14/175747
 	func setup() {
 		emitter.emitterMode = kCAEmitterLayerOutline
 		emitter.emitterShape = kCAEmitterLayerCircle
@@ -495,41 +439,17 @@ class SummerwarsScrollView: UIScrollView {
 		emitter.preservesDepth = true
 		emitter.emitterCells = []
 		
-		for _ in 0..<10 {
-    		cell = CAEmitterCell()
-    		cell.contents = UIImage(named: "spark")!.CGImage
-    		cell.color = randomColor(luminosity: .Light).CGColor
-    		cell.birthRate = 10
-    		cell.lifetime = 50
-    		cell.lifetimeRange = 5
-    		cell.velocity = 20
-    		cell.velocityRange = 25
-    		cell.scale = 0.02
-    		cell.scaleRange = 0.002
-    		cell.scaleSpeed = 0.006
-			emitter.emitterCells?.append(cell)
+		for _ in 0..<5{
+			emitter.emitterCells?.append(CAEmitterCell.fast(shapes[Int.random(max: shapes.count - 1)]))
 		}
-	}
-	
-	var emitterTimer: NSTimer?
-	
-	override func didMoveToWindow() {
-		super.didMoveToWindow()
 		
-		if self.window != nil {
-			if emitterTimer == nil {
-				emitterTimer = NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "randomizeEmitterPosition", userInfo: nil, repeats: true)
-			}
-		} else if emitterTimer != nil {
-			emitterTimer?.invalidate()
-			emitterTimer = nil
+		for _ in 0..<15 {
+			emitter.emitterCells?.append(CAEmitterCell.middle(shapes[Int.random(max: shapes.count - 1)]))
 		}
-	}
-	
-	func randomizeEmitterPosition() {
-		emitter.emitterPosition = CGPointMake(CGFloat(arc4random()) % contentSize.width/2,
-											  CGFloat(arc4random()) % contentSize.height/2)
-		cell.birthRate = 10
+		
+		for _ in 0..<30 {
+			emitter.emitterCells?.append(CAEmitterCell.slow(shapes[Int.random(max: shapes.count - 1)]))
+		}
 	}
 	
 	override func layoutSubviews() {
@@ -539,183 +459,48 @@ class SummerwarsScrollView: UIScrollView {
 	}
 }
 
-class TransitionCircleView: UIView{
-	
-	var myColor:UIColor!
-	
-	required init?(coder aDecoder: NSCoder) {
-		super.init(coder: aDecoder)
+extension CAEmitterCell {
+	class func fast(shape:String) -> CAEmitterCell {
+		let cell = CAEmitterCell()
+		cell.contents = UIImage(named: shape)!.CGImage
+		cell.color = randomColor(luminosity: .Light).CGColor
+		cell.birthRate = 1
+		cell.lifetime = 10
+		cell.lifetimeRange = 5
+		cell.velocity = 60
+		cell.velocityRange = 65
+		cell.scale = 0.6
+		cell.scaleRange = 0.1
+		cell.scaleSpeed = 0.06
+		return cell
 	}
-	
-	override init(frame: CGRect) {
-		super.init(frame: frame)
-		backgroundColor = UIColor.clearColor()
-		myColor = UIColor.whiteColor()
+	class func middle(shape:String) -> CAEmitterCell {
+		let cell = CAEmitterCell()
+		cell.contents = UIImage(named: shape)!.CGImage
+		cell.color = randomColor(luminosity: .Light).CGColor
+		cell.birthRate = 1
+		cell.lifetime = 10
+		cell.lifetimeRange = 5
+		cell.velocity = 40
+		cell.velocityRange = 45
+		cell.scale = 0.6
+		cell.scaleRange = 0.1
+		cell.scaleSpeed = 0.06
+		return cell
 	}
-	
-	override func drawRect(rect: CGRect) {
-		let oval = UIBezierPath(ovalInRect: self.bounds)
-		myColor.setFill()
-		oval.fill()
-	}
-	
-}
-
-class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate, UINavigationControllerDelegate{
-	
-	var presenting = true
-	var duration: NSTimeInterval = 1.5
-	var delay: NSTimeInterval = 0.5
-	var dump:CGFloat = 0.5
-	var velocity:CGFloat = 0.8
-	var startFrame: CGRect!
-	var color: UIColor!
-	
-	var parentView:UIScrollView!
-	var warsView:WarsView!
-	
-	override init(){
-	}
-	
-	init(parentView:UIScrollView, warsView:WarsView){
-		self.parentView = parentView
-		self.warsView = warsView
-	}
-	
-	// MARK: UIViewControllerAnimatedTransitioning
-	func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
-		
-		let containerView = transitionContext.containerView()
-		let fromVC = transitionContext.viewControllerForKey(UITransitionContextFromViewControllerKey)!
-		let toVC   = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey)!
-		let fromView = fromVC.view
-		let toView = toVC.view
-		transitionIntoRoom(fromView, toView: toView, containerView: containerView!, transitionContext: transitionContext)
-	}
-	
-	func transitionDuration(transitionContext: UIViewControllerContextTransitioning?) -> NSTimeInterval {
-		return duration
-	}
-	
-	// MARK: UIViewControllerTransitioningDelegate
-	
-	func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-		self.presenting = true
-		return self
-	}
-	
-	func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-		presenting = false
-		return self
-	}
-	
-	func navigationController(navigationController: UINavigationController,
-		animationControllerForOperation operation: UINavigationControllerOperation,
-		fromViewController fromVC: UIViewController,
-		toViewController toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-			if operation == UINavigationControllerOperation.Pop {
-				presenting = false
-			}
-			
-			return self
-	}
-	
-	private func transitionIntoRoom(fromView: UIView,
-		toView: UIView,
-		containerView: UIView,
-		transitionContext: UIViewControllerContextTransitioning) {
-			
-			containerView.addSubview(toView)
-			containerView.addSubview(fromView)
-			
-			// set transition center
-			let x = (-parentView.contentOffset.x) + warsView.center.x * parentView.zoomScale
-			let y = (-parentView.contentOffset.y)  + warsView.center.y * parentView.zoomScale
-			
-			let frame = CGRectMake(warsView.frame.origin.x, warsView.frame.origin.y,
-				warsView.frame.width*parentView.zoomScale,
-				warsView.frame.height*parentView.zoomScale)
-			
-			let transitionCircle = TransitionCircleView(frame: frame)
-			transitionCircle.myColor = warsView.eventColor
-			transitionCircle.center = CGPointMake(x, y)
-			containerView.addSubview(transitionCircle)
-			
-			let frameLabel = CGRectMake(warsView.eventTitleLabel.frame.origin.x,
-				warsView.eventTitleLabel.frame.origin.y,
-				warsView.eventTitleLabel.frame.width  * parentView.zoomScale,
-				warsView.eventTitleLabel.frame.height * parentView.zoomScale)
-			
-			let transitionRect = UIImageView(frame: frameLabel)
-			transitionRect.backgroundColor = UIColor.blackColor()
-			transitionRect.center = CGPointMake(x, y)
-			transitionRect.image = warsView.eventImageView.image
-			containerView.addSubview(transitionRect)
-			
-			let scale = fromView.frame.height * 2.8 / transitionCircle.frame.height
-			let movieWidth = fromView.frame.width
-			let movieHeight = fromView.frame.width * 0.6
-			
-			let durationRatio:CGFloat = 1.3
-			let d = 0.35 * durationRatio
-			
-			if presenting {
-				// this is scale small a bit
-				warsView.alpha = 0
-				
-				// transition
-				transitionCircle.transform = CGAffineTransformMakeScale(1, 1)
-				transitionRect.transform = CGAffineTransformMakeScale(1, 1)
-				
-				// then zoom in
-				UIView.animateWithDuration(NSTimeInterval(d), delay: 0.0, options: UIViewAnimationOptions.CurveEaseIn,
-					animations: {
-						// transition
-						transitionCircle.transform = CGAffineTransformMakeScale(scale, scale)
-						transitionRect.transform = CGAffineTransformMakeScale(1, 1)
-						transitionRect.frame = CGRectMake(0, 0, movieWidth, movieHeight)
-						transitionRect.center = CGPointMake(toView.frame.width/2, toView.frame.height/2)
-					},
-					completion: {(bool: Bool) -> () in
-						self.warsView.alpha = 1
-						// remove
-						fromView.removeFromSuperview()
-						transitionRect.removeFromSuperview()
-						transitionCircle.removeFromSuperview()
-						transitionContext.completeTransition(true)
-					}
-				)
-				
-			} else {
-				warsView.alpha = 1
-				
-				transitionRect.frame = CGRectMake(0, 55, movieWidth, movieHeight)
-				
-				// transition
-				transitionCircle.transform = CGAffineTransformMakeScale(scale, scale)
-				transitionRect.transform = CGAffineTransformMakeScale(1, 1)
-				
-				// then zoom in
-				UIView.animateWithDuration(NSTimeInterval(d), delay: 0.0, options: UIViewAnimationOptions.CurveEaseIn,
-					animations: {
-						// transition
-						transitionCircle.transform = CGAffineTransformMakeScale(1, 1)
-						transitionRect.transform = CGAffineTransformMakeScale(1, 1)
-						transitionRect.frame = frameLabel
-						transitionRect.center = CGPointMake(x, y)
-					},
-					completion: {(bool: Bool) -> () in
-						self.warsView.alpha = 1
-						// remove
-						fromView.removeFromSuperview()
-						transitionRect.removeFromSuperview()
-						transitionCircle.removeFromSuperview()
-						transitionContext.completeTransition(true)
-					}
-				)
-				
-			}
-			
+	class func slow(shape:String) -> CAEmitterCell {
+		let cell = CAEmitterCell()
+		cell.contents = UIImage(named: shape)!.CGImage
+		cell.color = randomColor(luminosity: .Light).CGColor
+		cell.birthRate = 1
+		cell.lifetime = 10
+		cell.lifetimeRange = 5
+		cell.velocity = 20
+		cell.velocityRange = 25
+		cell.scale = 0.6
+		cell.scaleRange = 0.1
+		cell.scaleSpeed = 0.06
+		return cell
 	}
 }
 
@@ -724,3 +509,5 @@ extension Int {
 		return Int(arc4random_uniform(UInt32((max - min) + 1))) + min
 	}
 }
+
+
