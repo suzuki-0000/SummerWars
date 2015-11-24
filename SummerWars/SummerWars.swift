@@ -11,16 +11,17 @@ import UIKit
 public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	
 	// UI: home
-	var homeSpaceView: UIScrollView!
-	var homeVirtualSpaceView: UIView = UIView() // initialized in first.
-	var homeEventViews = [HomeEventView]()
+	var summerwarsScrollView: SummerwarsScrollView!
+	var summerwarsOprationView: UIView = UIView() // initialized in first.
+	var summerwarsViews = [WarsView]()
 	
+	let maxViewCount = 30
 	let maxLayerCount = 3 // 3 is property size using with eyes for iOS.
-	let eventRadius:CGFloat = HomeEventView.getEventRadius()
-	let innerRadius:CGFloat = HomeEventView.getEventRadius() * 0.3 // 0.3 is property size using with eyes for iOS.
-	let operableZoomScale:CGFloat = 0.85
+	let eventRadius:CGFloat = WarsView.getEventRadius()
+	let innerRadius:CGFloat = WarsView.getEventRadius() * 0.3 // 0.3 is property size using with eyes for iOS.
+	let operableZoomScale:CGFloat = 0.65
 	var focusArea = (width: CGFloat(0.0), height: CGFloat(0.0))
-	var homeSpaceViewScale: CGFloat = 1.0
+	var summerwarsScrollViewScale: CGFloat = 1.0
 	
 	// property
 	var isInitializedViews = false
@@ -63,20 +64,20 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	
 	private func setupHomeView() {
 		// create scrollview
-		homeSpaceView = SummerwarsBackgroundView(frame: CGRectMake(0, 0, view.frame.width, view.frame.height))
-		homeSpaceView.delegate = self
-		homeSpaceView.maximumZoomScale = 1.2
-		homeSpaceView.minimumZoomScale = 0.7
-		homeSpaceView.showsHorizontalScrollIndicator = false
-		homeSpaceView.showsVerticalScrollIndicator = false
-		homeSpaceView.pagingEnabled = false
-		homeSpaceView.directionalLockEnabled = false
-		homeSpaceView.backgroundColor = .clearColor()
+		summerwarsScrollView = SummerwarsScrollView(frame: CGRectMake(0, 0, view.frame.width, view.frame.height))
+		summerwarsScrollView.delegate = self
+		summerwarsScrollView.maximumZoomScale = 1.2
+		summerwarsScrollView.minimumZoomScale = 0.5
+		summerwarsScrollView.showsHorizontalScrollIndicator = false
+		summerwarsScrollView.showsVerticalScrollIndicator = false
+		summerwarsScrollView.pagingEnabled = false
+		summerwarsScrollView.directionalLockEnabled = false
+		summerwarsScrollView.backgroundColor = .clearColor()
 		
-		view.addSubview(homeSpaceView)
+		view.addSubview(summerwarsScrollView)
 		
 		// add focus area for animate
-		focusArea = (width: homeSpaceView.frame.width * 0.4, height: homeSpaceView.frame.height * 0.4)
+		focusArea = (width: summerwarsScrollView.frame.width * 0.4, height: summerwarsScrollView.frame.height * 0.4)
 		
 		// create home space.
 		createHomeSpace()
@@ -85,29 +86,28 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	func createHomeSpace() {
 		
 		// create virtual view dynamically
-		let layerCount = getLayerCountByRoomCount(30)
+		let layerCount = getLayerCountByRoomCount(maxViewCount)
 		let lastLayerRadius = getLayerRadius(layerCount + 1) // + 1 is for space for outer
 		
 		// calcrate dynamic space size. (diameter of mexlayer) + outer white space
 		var virtualSpaceSize = (lastLayerRadius * 2.0) + view.frame.width/2
 		// if dynamic view size is smaller than device height, make scale up for scrolling
-		if virtualSpaceSize < homeSpaceView.frame.height * 2.0 {
-			virtualSpaceSize = homeSpaceView.frame.height * 2.0
+		if virtualSpaceSize < summerwarsScrollView.frame.height * 2.0 {
+			virtualSpaceSize = summerwarsScrollView.frame.height * 2.0
 		}
 		let centerVirtualSpace = CGPointMake(virtualSpaceSize/2.0, virtualSpaceSize/2.0)
 		
 		// calcurate center point of scroll view
-		let upLeftX = virtualSpaceSize/2 - homeSpaceView.frame.width/2
-		let upLeftY = virtualSpaceSize/2 - homeSpaceView.frame.height/2
+		let upLeftX = virtualSpaceSize/2 - summerwarsScrollView.frame.width/2
+		let upLeftY = virtualSpaceSize/2 - summerwarsScrollView.frame.height/2
 		
-		homeVirtualSpaceView.backgroundColor = UIColor.yellowColor()
-		homeVirtualSpaceView = UIView(frame: CGRectMake(0, 0, virtualSpaceSize, virtualSpaceSize))
-		homeVirtualSpaceView.transform = CGAffineTransformMakeScale(0.3, 0.3)
-		homeVirtualSpaceView.alpha = 0.5
+		summerwarsOprationView = UIView(frame: CGRectMake(0, 0, virtualSpaceSize, virtualSpaceSize))
+		summerwarsOprationView.transform = CGAffineTransformMakeScale(0.3, 0.3)
+		summerwarsOprationView.alpha = 0.5
 		
-		homeSpaceView.contentSize = homeVirtualSpaceView.bounds.size
-		homeSpaceView.setContentOffset(CGPointMake(upLeftX, upLeftY), animated: false)
-		homeSpaceView.addSubview(homeVirtualSpaceView)
+		summerwarsScrollView.contentSize = summerwarsOprationView.bounds.size
+		summerwarsScrollView.setContentOffset(CGPointMake(upLeftX, upLeftY), animated: false)
+		summerwarsScrollView.addSubview(summerwarsOprationView)
 		
 		var roomCountIndex = 0
 		// layerCount is calcurated by event count
@@ -121,7 +121,7 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 			var roomCountOfLayer:Int!
 			if layerIndex == layerCount{
 				// count room if it is last layer
-				roomCountOfLayer = 30 - roomCountIndex
+				roomCountOfLayer = maxViewCount - roomCountIndex
 			} else {
 				// not the end of layer, apply max room count
 				roomCountOfLayer = currentLayerOfMaxRoomCount
@@ -143,31 +143,32 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 				let image = UIImage(named: "SummerWars.bundle/images/image\(Int.random(max: 17)).jpg", inBundle: bundle, compatibleWithTraitCollection: nil) ?? UIImage()
 				
 				let r = getLayerRadiusByRoomSize(Int.random(max: getMaxRoomSizeOfMaxCircleRadius()))
-				let homeEventView = HomeEventView()
-				homeEventView.frame = CGRectMake(0.0, 0.0, r*2.0, r*2.0)
-				homeEventView.center = CGPointMake(centerX, centerY)
-				homeEventView.setEvent(image)
+				let summerwarsView = WarsView()
+				summerwarsView.frame = CGRectMake(0.0, 0.0, r*2.0, r*2.0)
+				summerwarsView.center = CGPointMake(centerX, centerY)
+				summerwarsView.setEvent(image)
 				
 				//create transParent Button For segue
-				var btn = UIButton(frame: CGRectMake(0.0, 0.0, homeEventView.frame.width, homeEventView.frame.height))
-				homeEventView.addSubview(btn)
+				let btn = UIButton(frame: CGRectMake(0.0, 0.0, summerwarsView.frame.width, summerwarsView.frame.height))
+				btn.addTarget(self, action: "startWars:", forControlEvents: .TouchUpInside)
+				summerwarsView.addSubview(btn)
 				
 				// add to local cache
-				homeEventViews.append(homeEventView)
+				summerwarsViews.append(summerwarsView)
 				
 				// add to view
-				homeVirtualSpaceView.addSubview(homeEventView)
+				summerwarsOprationView.addSubview(summerwarsView)
 				
 				roomCountIndex++
 			}
 		}
 		
 		// this is what we can see like a 3D view
-		for index in 0..<homeEventViews.count {
-			if(index % 3 == 1){ homeVirtualSpaceView.bringSubviewToFront(homeEventViews[index]) }
+		for index in 0..<summerwarsViews.count {
+			if(index % 3 == 1){ summerwarsOprationView.bringSubviewToFront(summerwarsViews[index]) }
 		}
-		for index in 0..<homeEventViews.count {
-			if(index % 3 == 2){ homeVirtualSpaceView.bringSubviewToFront(homeEventViews[index]) }
+		for index in 0..<summerwarsViews.count {
+			if(index % 3 == 2){ summerwarsOprationView.bringSubviewToFront(summerwarsViews[index]) }
 		}
 	}
 	
@@ -206,8 +207,8 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	
 	// "room size" is not people count. size is defined at server. eg. 1,2,3..
 	func getLayerRadiusByRoomSize(roomSize:Int) ->CGFloat {
-		let max = HomeEventView.getMaxCircleRadius()
-		let min = HomeEventView.getMinCircleRadius()
+		let max = WarsView.getMaxCircleRadius()
+		let min = WarsView.getMinCircleRadius()
 		
 		var radius:CGFloat!
 		if(roomSize < getMaxRoomSizeOfMaxCircleRadius()){
@@ -230,8 +231,8 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 			UIView.animateWithDuration( 0.8, delay: 0, options: UIViewAnimationOptions.CurveEaseInOut,
 				animations:  {[weak self]() -> () in
 					if let _self = self {
-						_self.homeVirtualSpaceView.transform = CGAffineTransformMakeScale(1.0, 1.0)
-						_self.homeVirtualSpaceView.alpha = 1.0
+						_self.summerwarsOprationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
+						_self.summerwarsOprationView.alpha = 1.0
 					}
 				},
 				completion: {[weak self](bool: Bool) -> () in
@@ -247,16 +248,16 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 	func animateIfFocus() {
 		if isInitializedViews && !isDraggingSpace {
 			// center[X,Y] is dynamical center position.
-			let centerX = (homeSpaceView.bounds.origin.x + homeSpaceView.frame.width)/homeSpaceViewScale
-			let centerY = (homeSpaceView.bounds.origin.y + homeSpaceView.frame.height)/homeSpaceViewScale
+			let centerX = (summerwarsScrollView.bounds.origin.x + summerwarsScrollView.frame.width)/summerwarsScrollViewScale
+			let centerY = (summerwarsScrollView.bounds.origin.y + summerwarsScrollView.frame.height)/summerwarsScrollViewScale
 			
-			for homeEvent in homeEventViews {
+			for v in summerwarsViews {
 				
 				// absolute distance from event point
-				let dx = abs(centerX - homeEvent.center.x)
-				let dy = abs(centerY - homeEvent.center.y)
+				let dx = abs(centerX - v.center.x)
+				let dy = abs(centerY - v.center.y)
 				
-				if(dx < focusArea.width/homeSpaceViewScale && dy < focusArea.height/homeSpaceViewScale){
+				if(dx < focusArea.width/summerwarsScrollViewScale && dy < focusArea.height/summerwarsScrollViewScale){
 				} else {
 				}
 			}
@@ -271,57 +272,63 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		let offsetPoint:CGPoint = scrollView.contentOffset
 		
 		// how many distance from center point of scrollview
-		let dx = offsetPoint.x - ( homeVirtualSpaceView.frame.width - homeSpaceView.frame.width ) / 2.0
-		let dy = offsetPoint.y - ( homeVirtualSpaceView.frame.height - homeSpaceView.frame.height ) / 2.0
+		let dx = offsetPoint.x - ( summerwarsOprationView.frame.width - summerwarsScrollView.frame.width ) / 2.0
+		let dy = offsetPoint.y - ( summerwarsOprationView.frame.height - summerwarsScrollView.frame.height ) / 2.0
 		
-		for index in 0..<homeEventViews.count {
+		for index in 0..<summerwarsViews.count {
 			if(index % 3 == 0){
-				homeEventViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.52, dy * 0.32)
-//				homeEventViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.22, dy * 0.18)
+				summerwarsViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.52, dy * 0.32)
 			} else if(index % 3 == 1){
-				homeEventViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.26, dy * 0.24)
+				summerwarsViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.26, dy * 0.24)
 			}
 		}
 	}
 	
 	public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-		return homeVirtualSpaceView
+		return summerwarsOprationView
 	}
 	
 	public func scrollViewDidEndZooming(scrollView: UIScrollView, withView view: UIView!, atScale scale: CGFloat) {
 		//set zoomingScale
-		homeSpaceViewScale = scale
+		summerwarsScrollViewScale = scale
 	}
 	
 	public func scrollViewWillBeginDragging(scrollView: UIScrollView) {
 		// set drag status
 		isDraggingSpace = true
-	
+		
+		// animation
+		for v in summerwarsViews {
+			v.doFocus()
+		}
 	}
 	
 	public func scrollViewWillEndDragging(scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
 		// set drag status
 		isDraggingSpace = false
-		animateIfFocus()
+		
+		// animation
+		for v in summerwarsViews {
+			v.undoFocus()
+		}
+	}
+	
+	public func startWars(button:UIButton){
+		// hello 
+		debugPrint("hello")
+		
 	}
 }
 
-
-
-
-class HomeEventView: UIView {
+class WarsView: UIView{
 	
-	// Layout Property
-	let ownerDiameter:CGFloat = 44.0
-	
-	var followIconImageView: UIImageView!
 	// UI
 	var baseView: UIView!
 	var eventImageView : UIImageView!
 	var eventTitleLabel = UILabel()
 	var eventTitleLabelBackground = UIControl()
-	// Property
-	var userDeployedPoint = [Int]()
+	var eventColor:UIColor!
+	var isFocus = false
 	
 	required init(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)!
@@ -348,18 +355,19 @@ class HomeEventView: UIView {
 		
 		// setup layout
 		opaque = false
+		eventColor = randomColor(luminosity: .Light)
 		
 		// base view for add view
 		baseView = UIView(frame: frame)
 		baseView.center = CGPointMake(frame.width/2, frame.height/2)
-		baseView.backgroundColor = randomColor(luminosity: .Light)
+		baseView.backgroundColor = eventColor
 		baseView.layer.cornerRadius = frame.width/2
 		baseView.layer.masksToBounds = true
 		
 		// add video image view
 		eventImageView = UIImageView(frame: CGRectMake(0, 0, frame.width, frame.height*0.42))
 		eventImageView.center = CGPointMake(frame.width/2, frame.height/2)
-		eventImageView.contentMode = UIViewContentMode.ScaleAspectFill
+		eventImageView.contentMode = .ScaleAspectFill
 		eventImageView.clipsToBounds = true
 		eventImageView.image = image
 		baseView.addSubview(eventImageView)
@@ -374,10 +382,10 @@ class HomeEventView: UIView {
 			imageViewWidth - eventTitleMargin, imageHeight))
 		eventTitleLabel.center = CGPointMake(eventImageView.center.x, eventTitleLabel.center.y )
 		eventTitleLabel.text = "Hello world."
-		eventTitleLabel.textColor = UIColor.whiteColor()
-		eventTitleLabel.textAlignment = NSTextAlignment.Center
+		eventTitleLabel.textColor = .whiteColor()
+		eventTitleLabel.textAlignment = .Center
+		eventTitleLabel.lineBreakMode = .ByWordWrapping
 		eventTitleLabel.numberOfLines = 2
-		eventTitleLabel.lineBreakMode = NSLineBreakMode.ByWordWrapping
 		
 		// eventTitleLabel Background
 		eventTitleLabelBackground = UIControl()
@@ -390,9 +398,32 @@ class HomeEventView: UIView {
 		
 		addSubview(baseView)
 	}
+	
+	// MARK: - Animate Function
+func doFocus() {
+		if !isFocus {
+			isFocus = true
+    		UIView.animateWithDuration(0.2, animations: {() -> Void in
+    			self.eventTitleLabel.alpha = 0.0
+    			self.eventTitleLabelBackground.alpha = 0.0
+    			}, completion: {(Bool) -> () in
+    		})
+		}
+	}
+	
+	func undoFocus() {
+		if isFocus {
+			isFocus = false
+    		UIView.animateWithDuration(1.0, animations: {() -> Void in
+    			self.eventTitleLabel.alpha = 1.0
+    			self.eventTitleLabelBackground.alpha = 1.0
+    			}, completion: {(Bool) -> () in
+    		})
+		}
+	}
 }
 
-class SummerwarsBackgroundView: UIScrollView {
+class SummerwarsScrollView: UIScrollView {
 	
 	override class func layerClass() -> AnyClass {
 		return CAEmitterLayer.self
@@ -412,7 +443,7 @@ class SummerwarsBackgroundView: UIScrollView {
 		return layer as! CAEmitterLayer
 	}
 	
-	private var particle: CAEmitterCell!
+	private var cell: CAEmitterCell!
 	
 	//http://breaktimes.hatenablog.com/entry/2015/05/14/175747
 	func setup() {
@@ -423,18 +454,18 @@ class SummerwarsBackgroundView: UIScrollView {
 		emitter.emitterCells = []
 		
 		for _ in 0..<10 {
-    		particle = CAEmitterCell()
-    		particle.contents = UIImage(named: "spark")!.CGImage
-    		particle.color = randomColor(luminosity: .Light).CGColor
-    		particle.birthRate = 10
-    		particle.lifetime = 50
-    		particle.lifetimeRange = 5
-    		particle.velocity = 20
-    		particle.velocityRange = 30
-    		particle.scale = 0.02
-    		particle.scaleRange = 0.1
-    		particle.scaleSpeed = 0.006
-			emitter.emitterCells?.append(particle)
+    		cell = CAEmitterCell()
+    		cell.contents = UIImage(named: "spark")!.CGImage
+    		cell.color = randomColor(luminosity: .Light).CGColor
+    		cell.birthRate = 10
+    		cell.lifetime = 50
+    		cell.lifetimeRange = 5
+    		cell.velocity = 20
+    		cell.velocityRange = 25
+    		cell.scale = 0.02
+    		cell.scaleRange = 0.002
+    		cell.scaleSpeed = 0.006
+			emitter.emitterCells?.append(cell)
 		}
 	}
 	
@@ -455,14 +486,190 @@ class SummerwarsBackgroundView: UIScrollView {
 	
 	func randomizeEmitterPosition() {
 		emitter.emitterPosition = CGPointMake(CGFloat(arc4random()) % contentSize.width/2,
-											  CGFloat(arc4random()) %	contentSize.height/2)
-		particle.birthRate = 10
+											  CGFloat(arc4random()) % contentSize.height/2)
+		cell.birthRate = 10
 	}
 	
 	override func layoutSubviews() {
 		super.layoutSubviews()
 		emitter.emitterPosition = CGPointMake(contentSize.width/2, contentSize.height/2)
 		emitter.emitterSize = self.bounds.size
+	}
+}
+
+class BaseCircleView: UIView{
+	
+	var myColor:UIColor!
+	
+	required init?(coder aDecoder: NSCoder) {
+		super.init(coder: aDecoder)
+	}
+	
+	override init(frame: CGRect) {
+		super.init(frame: frame)
+		backgroundColor = UIColor.clearColor()
+		myColor = UIColor.whiteColor()
+	}
+	
+	override func drawRect(rect: CGRect) {
+		let oval = UIBezierPath(ovalInRect: self.bounds)
+		myColor.setFill()
+		oval.fill()
+	}
+	
+}
+
+class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerTransitioningDelegate, UINavigationControllerDelegate{
+	
+	var presenting = true
+	var duration: NSTimeInterval = 1.5
+	var delay: NSTimeInterval = 0.5
+	var dump:CGFloat = 0.5
+	var velocity:CGFloat = 0.8
+	var startFrame: CGRect!
+	var color: UIColor!
+	
+	var parentView:UIScrollView!
+	var warsView:WarsView!
+	
+	init(parentView:UIScrollView, warsView:WarsView){
+		self.parentView = parentView
+		self.warsView = warsView
+		
+	}
+	
+	// MARK: UIViewControllerAnimatedTransitioning
+	func animateTransition(transitionContext: UIViewControllerContextTransitioning) {
+		
+		let containerView = transitionContext.containerView()
+		let fromVC = transitionContext.viewControllerForKey(UITransitionContextFromViewControllerKey)!
+		let toVC   = transitionContext.viewControllerForKey(UITransitionContextToViewControllerKey)!
+		let fromView = fromVC.view
+		let toView = toVC.view
+		transitionIntoRoom(fromView, toView: toView, containerView: containerView!, transitionContext: transitionContext)
+	}
+	
+	func transitionDuration(transitionContext: UIViewControllerContextTransitioning?) -> NSTimeInterval {
+		return duration
+	}
+	
+	// MARK: UIViewControllerTransitioningDelegate
+	
+	func animationControllerForPresentedController(presented: UIViewController, presentingController presenting: UIViewController, sourceController source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+		self.presenting = true
+		return self
+	}
+	
+	func animationControllerForDismissedController(dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+		presenting = false
+		return self
+	}
+	
+	func navigationController(navigationController: UINavigationController,
+		animationControllerForOperation operation: UINavigationControllerOperation,
+		fromViewController fromVC: UIViewController,
+		toViewController toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+			if operation == UINavigationControllerOperation.Pop {
+				presenting = false
+			}
+			
+			return self
+	}
+	
+	private func transitionIntoRoom(fromView: UIView,
+		toView: UIView,
+		containerView: UIView,
+		transitionContext: UIViewControllerContextTransitioning) {
+			
+			containerView.addSubview(toView)
+			containerView.addSubview(fromView)
+			
+			// set transition center
+			let x = (-parentView.contentOffset.x) + warsView.center.x * parentView.zoomScale
+			let y = (-parentView.contentOffset.y)  + warsView.center.y * parentView.zoomScale
+			
+			let frame = CGRectMake(warsView.frame.origin.x, warsView.frame.origin.y,
+				warsView.frame.width*parentView.zoomScale,
+				warsView.frame.height*parentView.zoomScale)
+			
+			let transitionCircle = BaseCircleView(frame: frame)
+			transitionCircle.myColor = warsView.eventColor
+			transitionCircle.center = CGPointMake(x, y)
+			containerView.addSubview(transitionCircle)
+			
+			let frameLabel = CGRectMake(warsView.eventTitleLabel.frame.origin.x,
+				warsView.eventTitleLabel.frame.origin.y,
+				warsView.eventTitleLabel.frame.width  * parentView.zoomScale,
+				warsView.eventTitleLabel.frame.height * parentView.zoomScale)
+			
+			let transitionRect = UIImageView(frame: frameLabel)
+			transitionRect.backgroundColor = UIColor.blackColor()
+			transitionRect.center = CGPointMake(x, y)
+			containerView.addSubview(transitionRect)
+			
+			let scale = fromView.frame.height * 2.8 / transitionCircle.frame.height
+			let movieWidth = fromView.frame.width
+			let movieHeight = fromView.frame.width * 0.6
+			
+			let durationRatio:CGFloat = 1.3
+			let d = 0.35 * durationRatio
+			
+			if presenting {
+				// this is scale small a bit
+				warsView.alpha = 0
+				
+				// transition
+				transitionCircle.transform = CGAffineTransformMakeScale(1, 1)
+				transitionRect.transform = CGAffineTransformMakeScale(1, 1)
+				
+				// then zoom in
+				UIView.animateWithDuration(NSTimeInterval(d), delay: 0.0, options: UIViewAnimationOptions.CurveEaseIn,
+					animations: {
+						// transition
+						transitionCircle.transform = CGAffineTransformMakeScale(scale, scale)
+						transitionRect.transform = CGAffineTransformMakeScale(1, 1)
+						transitionRect.frame = CGRectMake(0, 55, movieWidth, movieHeight)
+					},
+					completion: {(bool: Bool) -> () in
+						self.warsView.alpha = 1
+						// remove
+						fromView.removeFromSuperview()
+						transitionRect.removeFromSuperview()
+						transitionCircle.removeFromSuperview()
+						transitionContext.completeTransition(true)
+					}
+				)
+				
+			} else {
+				warsView.alpha = 1
+				
+				transitionRect.frame = CGRectMake(0, 55, movieWidth, movieHeight)
+				
+				// transition
+				transitionCircle.transform = CGAffineTransformMakeScale(scale, scale)
+				transitionRect.transform = CGAffineTransformMakeScale(1, 1)
+				
+				// then zoom in
+				UIView.animateWithDuration(NSTimeInterval(d), delay: 0.0, options: UIViewAnimationOptions.CurveEaseIn,
+					animations: {
+						// transition
+						transitionCircle.transform = CGAffineTransformMakeScale(1, 1)
+						transitionRect.transform = CGAffineTransformMakeScale(1, 1)
+						transitionRect.frame = frameLabel
+						transitionRect.center = CGPointMake(x, y)
+					},
+					completion: {(bool: Bool) -> () in
+						self.warsView.alpha = 1
+						// remove
+						fromView.removeFromSuperview()
+						transitionRect.removeFromSuperview()
+						transitionCircle.removeFromSuperview()
+						transitionContext.completeTransition(true)
+					}
+				)
+				
+			}
+			
 	}
 }
 
