@@ -313,10 +313,52 @@ public class SummerWarsView: UIViewController, UIScrollViewDelegate {
 		}
 	}
 	
+	let transitionManager = TransitionManager()
 	public func startWars(button:UIButton){
+		guard let warsView = button.superview as? WarsView else {
+			return
+		}
 		// hello 
-		debugPrint("hello")
+		let vc = SummerwarsSecondViewController()
+		vc.warsView = warsView
+		vc.transitioningDelegate = transitionManager
+		transitionManager.warsView = warsView
+		transitionManager.parentView = summerwarsScrollView
 		
+		presentViewController(vc, animated: true, completion: {})
+	}
+}
+
+class SummerwarsSecondViewController:UIViewController{
+	
+	var warsView: WarsView!
+	
+	required init?(coder aDecoder: NSCoder) {
+	    fatalError("init(coder:) has not been implemented")
+	}
+
+	override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: NSBundle?) {
+		super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+	}
+	
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		view.backgroundColor = warsView.eventColor
+		
+		let imageView = UIImageView(frame: CGRectMake(0, 0, UIScreen.mainScreen().bounds.width, warsView.frame.height))
+		imageView.center = CGPointMake(view.frame.width/2, view.frame.height/2)
+		imageView.image = warsView.eventImageView.image
+		view.addSubview(imageView)
+		
+		let dismissButton = UIButton()
+		dismissButton.frame = CGRectMake(0, 0, 40, 40)
+		dismissButton.addTarget(self, action: "dismissButton:", forControlEvents: .TouchUpInside)
+		view.addSubview(dismissButton)
+	}
+	
+	public func dismissButton(btn: UIButton){
+		dismissViewControllerAnimated(true, completion: {})
 	}
 }
 
@@ -497,7 +539,7 @@ class SummerwarsScrollView: UIScrollView {
 	}
 }
 
-class BaseCircleView: UIView{
+class TransitionCircleView: UIView{
 	
 	var myColor:UIColor!
 	
@@ -532,10 +574,12 @@ class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIView
 	var parentView:UIScrollView!
 	var warsView:WarsView!
 	
+	override init(){
+	}
+	
 	init(parentView:UIScrollView, warsView:WarsView){
 		self.parentView = parentView
 		self.warsView = warsView
-		
 	}
 	
 	// MARK: UIViewControllerAnimatedTransitioning
@@ -592,7 +636,7 @@ class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIView
 				warsView.frame.width*parentView.zoomScale,
 				warsView.frame.height*parentView.zoomScale)
 			
-			let transitionCircle = BaseCircleView(frame: frame)
+			let transitionCircle = TransitionCircleView(frame: frame)
 			transitionCircle.myColor = warsView.eventColor
 			transitionCircle.center = CGPointMake(x, y)
 			containerView.addSubview(transitionCircle)
@@ -605,6 +649,7 @@ class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIView
 			let transitionRect = UIImageView(frame: frameLabel)
 			transitionRect.backgroundColor = UIColor.blackColor()
 			transitionRect.center = CGPointMake(x, y)
+			transitionRect.image = warsView.eventImageView.image
 			containerView.addSubview(transitionRect)
 			
 			let scale = fromView.frame.height * 2.8 / transitionCircle.frame.height
@@ -628,7 +673,8 @@ class TransitionManager: NSObject, UIViewControllerAnimatedTransitioning, UIView
 						// transition
 						transitionCircle.transform = CGAffineTransformMakeScale(scale, scale)
 						transitionRect.transform = CGAffineTransformMakeScale(1, 1)
-						transitionRect.frame = CGRectMake(0, 55, movieWidth, movieHeight)
+						transitionRect.frame = CGRectMake(0, 0, movieWidth, movieHeight)
+						transitionRect.center = CGPointMake(toView.frame.width/2, toView.frame.height/2)
 					},
 					completion: {(bool: Bool) -> () in
 						self.warsView.alpha = 1
