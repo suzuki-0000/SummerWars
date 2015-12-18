@@ -319,8 +319,8 @@ public class WarsView: UIView{
 		baseView.addSubview(warImageView)
 		
 		// calcurate image for title
-		let imageViewWidth = warImageView.frame.width
-		let imageHeight = warImageView.frame.height
+        let imageViewWidth = warImageView.frame.width
+        let imageHeight = warImageView.frame.height
 		let eventTitleMargin:CGFloat = 18
 		
 		// warTitleLabel
@@ -333,6 +333,7 @@ public class WarsView: UIView{
 		warTitleLabel.font = UIFont.boldSystemFontOfSize(18)
 		warTitleLabel.lineBreakMode = .ByWordWrapping
 		warTitleLabel.numberOfLines = 2
+		warTitleLabel.alpha = 0.0
 		
 		// warTitleLabel Background
 		warTitleLabelBackground = UIControl()
@@ -351,6 +352,7 @@ public class WarsView: UIView{
 		if !isFocus {
 			isFocus = true
     		UIView.animateWithDuration(0.2, animations: {
+    			self.warImageView.transform = CGAffineTransformMakeScale(1.1, 1.1)
     			self.warTitleLabel.alpha = 0.0
     			self.warTitleLabelBackground.alpha = 0.0
     			}, completion: nil )
@@ -361,6 +363,7 @@ public class WarsView: UIView{
 		if isFocus {
 			isFocus = false
     		UIView.animateWithDuration(1.0, animations: {
+    			self.warImageView.transform = CGAffineTransformIdentity
     			self.warTitleLabel.alpha = 1.0
     			self.warTitleLabelBackground.alpha = 1.0
     			}, completion: nil )

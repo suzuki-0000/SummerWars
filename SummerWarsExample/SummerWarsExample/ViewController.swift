@@ -24,7 +24,7 @@ class ViewController: UIViewController {
 		var contents = [WarsContent]()
 		
 		for _ in 0..<30{
-        	let image = UIImage(named: "image\(Int.random(max: 17)).jpg") ?? UIImage()
+        	let image = UIImage(named: "image\(Int.random(max: 16)).jpg") ?? UIImage()
 			contents.append(WarsContent(image:image, caption: captions[Int.random(max: captions.count - 1)]))
 		}
 		
