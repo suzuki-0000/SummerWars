@@ -159,14 +159,14 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	
 	func getLayerCountByCount(warCount:Int) ->Int {
 		var sumMaxWarCount = 0
-		for layerIndex in 0...Settings.maxLayerCount {
+		for layerIndex in 0...SummerwarsOptions.maxLayerCount {
 			let maxWarCountOfLayer = getMaxCountOfLayer(layerIndex)
 			sumMaxWarCount += maxWarCountOfLayer
 			if(warCount <= sumMaxWarCount) {
 				return layerIndex
 			}
 		}
-		return Settings.maxLayerCount
+		return SummerwarsOptions.maxLayerCount
 	}
 	
 	func getMaxCountOfLayer(layerIndex:Int) ->Int {
@@ -174,7 +174,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		let layerRadius = getLayerRadius(layerIndex)
 		
 		// length of from space to space
-		let lengthFromEventToEvent = Settings.warsMaxRadius * 2
+		let lengthFromEventToEvent = SummerwarsOptions.warsMaxRadius * 2
 		let lengthOfCircle: CGFloat = 2.0 * CGFloat(M_PI) * layerRadius
 		let maxWarCount = lengthOfCircle / lengthFromEventToEvent
 		
@@ -184,14 +184,14 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	func getLayerRadius(layerIndex : Int) -> CGFloat{
 		// find numer of radius from layerIndex (eg. 1, 2, 3)
 		let numberOfRadius:CGFloat = 2.0 * CGFloat(layerIndex) + 1.0
-		let outerRadius:CGFloat  = Settings.warsMaxRadius * numberOfRadius
+		let outerRadius:CGFloat  = SummerwarsOptions.warsMaxRadius * numberOfRadius
 		
-		return Settings.warsCentralRadius + outerRadius
+		return SummerwarsOptions.warsCentralRadius + outerRadius
 	}
 	
 	func getLayerRadiusBySize(warSize:Int) ->CGFloat {
-		let max = Settings.warsMaxRadius
-		let min = Settings.warsMinRadius
+		let max = SummerwarsOptions.warsMaxRadius
+		let min = SummerwarsOptions.warsMinRadius
 		
 		var radius:CGFloat!
 		if(warSize < getMaxWarSizeOfMaxCircleRadius()){
@@ -291,7 +291,7 @@ public class WarsView: UIView{
 	}
 	
 	static func getMinCircleRadius() -> CGFloat {
-		return Settings.warsMaxRadius * 0.6
+		return SummerwarsOptions.warsMaxRadius * 0.6
 	}
 	
 	func setWar(content: WarsContent) {
@@ -327,16 +327,16 @@ public class WarsView: UIView{
 		warTitleLabel = UILabel(frame: CGRectMake(0, 0,
 			imageViewWidth - eventTitleMargin, imageHeight))
 		warTitleLabel.center = CGPointMake(warImageView.center.x, warTitleLabel.center.y )
-		debugPrint(caption)
 		warTitleLabel.text = caption
 		warTitleLabel.textColor = .whiteColor()
 		warTitleLabel.textAlignment = .Center
+		warTitleLabel.font = UIFont.boldSystemFontOfSize(18)
 		warTitleLabel.lineBreakMode = .ByWordWrapping
 		warTitleLabel.numberOfLines = 2
 		
 		// warTitleLabel Background
 		warTitleLabelBackground = UIControl()
-		warTitleLabelBackground.backgroundColor = UIColor(red:0.0,green:0.0,blue:0.0,alpha:0.2)
+		warTitleLabelBackground.backgroundColor = UIColor(red:0.0, green:0.0, blue:0.0, alpha:0.2)
 		warTitleLabelBackground.frame = CGRectMake(0, 0, imageViewWidth, imageHeight)
 		warTitleLabelBackground.center = CGPointMake(warImageView.center.x, warImageView.center.y)
 		
@@ -350,22 +350,20 @@ public class WarsView: UIView{
     func doFocus() {
 		if !isFocus {
 			isFocus = true
-    		UIView.animateWithDuration(0.2, animations: {() -> Void in
+    		UIView.animateWithDuration(0.2, animations: {
     			self.warTitleLabel.alpha = 0.0
     			self.warTitleLabelBackground.alpha = 0.0
-    			}, completion: {(Bool) -> () in
-    		})
+    			}, completion: nil )
 		}
 	}
 	
 	func undoFocus() {
 		if isFocus {
 			isFocus = false
-    		UIView.animateWithDuration(1.0, animations: {() -> Void in
+    		UIView.animateWithDuration(1.0, animations: {
     			self.warTitleLabel.alpha = 1.0
     			self.warTitleLabelBackground.alpha = 1.0
-    			}, completion: {(Bool) -> () in
-    		})
+    			}, completion: nil )
 		}
 	}
 }
