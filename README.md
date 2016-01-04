@@ -7,14 +7,13 @@ SummerWars
 
 Summerwars is the view inspired by [Summerwars](https://youtu.be/zFBrz3u8VkY?t=10s).
 
-## features
-- can display like summerwars!!
-
 ![sample](Screenshots/example01.gif)
 
+## features
+- Display like Summerwars!!
 
 ## What is Summerwars??
-- Summer Wars is a 2009 Japanese animated science fiction film. [wikipedia](https://en.wikipedia.org/wiki/Summer_Wars).
+- Summer Wars is a 2009 Japanese animated science fiction film. see [wikipedia](https://en.wikipedia.org/wiki/Summer_Wars).
 - Also See this official [video](https://youtu.be/zFBrz3u8VkY?t=10s)
 
 ##Installation
@@ -49,17 +48,17 @@ you can customize with some options
 
 #### one's max radius
 ```ogdl
-public static var warsMaxRadius:CGFloat 
+SummerwarsOptions.warsMaxRadius = 200
 ```
 
 #### one's min radius
 ```ogdl
-public static var warsMinRadius:CGFloat
+SummerwarsOptions.warsMinRadius = 100
 ```
 
 #### central space 
 ```ogdl
-public static var warsCentralRadius:CGFloat 
+SummerwarsOptions.warsCentralRadius = 50
 ```
 
 ## License
