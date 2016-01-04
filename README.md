@@ -36,10 +36,12 @@ github "suzuki-0000/SummerWars"
 example project would be easy to understand.
 	
 ```swift
-var contents = [WarsContent]()
 // add some contents
+let content1 = WarsContent(image:UIImage(), caption: "Hello some caption1.")
+let content2 = WarsContent(image:UIImage(), caption: "Hello some caption2.")
+let content3 = WarsContent(image:UIImage(), caption: "Hello some caption3.")
 
-let summerWarsView = SummerWarsViewController(contents: contents)
+let summerWarsView = SummerWarsViewController(contents: [content1, content2, content3])
 addChildViewController(summerWarsView, toContainerView: view)
 ```
 
