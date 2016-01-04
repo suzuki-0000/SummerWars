@@ -9,7 +9,8 @@
 import UIKit
 
 public struct SummerwarsOptions{
-    public static var maxLayerCount = 3 // 3 is property size for iOS.
+    public static var maxLayerCount:Int = 3
+    public static var maxLayersWarsCount:Int = 10
     public static var warsMaxRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3
     public static var warsMinRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3 * 0.6
     public static var warsCentralRadius:CGFloat = UIScreen.mainScreen().bounds.size.width * 0.3 * 0.3 // 0.3 is property size using with eyes for iOS.
@@ -17,12 +18,10 @@ public struct SummerwarsOptions{
 
 public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	
-	
-	var summerwarsScrollView: SummerwarsScrollView!
-	var summerwarsOprationView: UIView = UIView() // initialized in first.
-	var summerwarsViews = [WarsView]()
-	var warsContents = [WarsContent]()
-	
+	private var summerwarsScrollView: SummerwarsScrollView!
+	private var summerwarsOperationView: UIView = UIView() // initialized in first.
+	private var summerwarsViews = [WarsView]()
+	private var warsContents = [WarsContent]()
 	private var isDraggingSpace = false
 	private var viewCount: Int { return warsContents.count }
 	
@@ -46,13 +45,8 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 	public override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		// call home view first.
 		createSummerwars()
 		showSummerwars()
-	}
-	
-	public override func viewWillAppear(animated: Bool) {
-		super.viewWillAppear(true)
 	}
 	
 	private func createSummerwars() {
@@ -69,13 +63,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		
 		view.addSubview(summerwarsScrollView)
 		
-		// create home space.
-		createHomeSpace()
-	}
-	
-	func createHomeSpace() {
-		
-		// create virtual view dynamically
+		// create view dynamically
 		let layerCount = getLayerCountByCount(viewCount)
 		let lastLayerRadius = getLayerRadius(layerCount + 1) // + 1 is for space for outer
 		
@@ -91,13 +79,13 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		let upLeftX = virtualSpaceSize/2 - summerwarsScrollView.frame.width/2
 		let upLeftY = virtualSpaceSize/2 - summerwarsScrollView.frame.height/2
 		
-		summerwarsOprationView = UIView(frame: CGRectMake(0, 0, virtualSpaceSize, virtualSpaceSize))
-		summerwarsOprationView.transform = CGAffineTransformMakeScale(0.0, 0.0)
-		summerwarsOprationView.alpha = 0.1
+		summerwarsOperationView = UIView(frame: CGRectMake(0, 0, virtualSpaceSize, virtualSpaceSize))
+		summerwarsOperationView.transform = CGAffineTransformMakeScale(0.0, 0.0)
+		summerwarsOperationView.alpha = 0.1
 		
-		summerwarsScrollView.contentSize = summerwarsOprationView.bounds.size
+		summerwarsScrollView.contentSize = summerwarsOperationView.bounds.size
 		summerwarsScrollView.setContentOffset(CGPointMake(upLeftX, upLeftY), animated: false)
-		summerwarsScrollView.addSubview(summerwarsOprationView)
+		summerwarsScrollView.addSubview(summerwarsOperationView)
 		
 		var warCountIndex = 0
 		// 1. loop layercount which is calcurated by event.count, request from server ( eg. 1.2.3.. 15 )
@@ -127,7 +115,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 				let centerX = centerVirtualSpace.x + currentLayerRadius * CGFloat(cos(diffTheta + theta * Double(warsPoint)))
 				let centerY = centerVirtualSpace.y + currentLayerRadius * CGFloat(sin(diffTheta + theta * Double(warsPoint)))
 				
-				let r = getLayerRadiusBySize(Int.random(max: getMaxWarSizeOfMaxCircleRadius()))
+				let r = getLayerRadiusBySize(Int.random(max: SummerwarsOptions.maxLayersWarsCount))
 				let summerwarsView = WarsView()
 				summerwarsView.frame = CGRectMake(0.0, 0.0, r*2.0, r*2.0)
 				summerwarsView.center = CGPointMake(centerX, centerY)
@@ -142,7 +130,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 				summerwarsViews.append(summerwarsView)
 				
 				// add to view
-				summerwarsOprationView.addSubview(summerwarsView)
+				summerwarsOperationView.addSubview(summerwarsView)
 				
 				warCountIndex++
 			}
@@ -150,10 +138,10 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		
 		// this is what we can see like a 3D view
 		for index in 0..<summerwarsViews.count {
-			if(index % 3 == 1){ summerwarsOprationView.bringSubviewToFront(summerwarsViews[index]) }
+			if index % 3 == 1 { summerwarsOperationView.bringSubviewToFront(summerwarsViews[index]) }
 		}
 		for index in 0..<summerwarsViews.count {
-			if(index % 3 == 2){ summerwarsOprationView.bringSubviewToFront(summerwarsViews[index]) }
+			if index % 3 == 2 { summerwarsOperationView.bringSubviewToFront(summerwarsViews[index]) }
 		}
 	}
 	
@@ -162,7 +150,7 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		for layerIndex in 0...SummerwarsOptions.maxLayerCount {
 			let maxWarCountOfLayer = getMaxCountOfLayer(layerIndex)
 			sumMaxWarCount += maxWarCountOfLayer
-			if(warCount <= sumMaxWarCount) {
+			if warCount <= sumMaxWarCount {
 				return layerIndex
 			}
 		}
@@ -193,26 +181,19 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		let max = SummerwarsOptions.warsMaxRadius
 		let min = SummerwarsOptions.warsMinRadius
 		
-		var radius:CGFloat!
-		if(warSize < getMaxWarSizeOfMaxCircleRadius()){
-			radius = min + (max - min) * ( CGFloat(warSize)*1.5 / CGFloat(getMaxWarSizeOfMaxCircleRadius()))
-		}
-		else {
-			radius = max
+		var radius = max
+		if warSize < SummerwarsOptions.maxLayersWarsCount {
+			radius = min + (max - min) * ( CGFloat(warSize)*1.5 / CGFloat(SummerwarsOptions.maxLayersWarsCount) )
 		}
 		return radius
-	}
-	
-	func getMaxWarSizeOfMaxCircleRadius() ->Int {
-		return 10
 	}
 	
 	// MARK: - Animate
 	func showSummerwars(){
 		UIView.animateWithDuration(0.8, delay: 2, options: .CurveEaseInOut,
 			animations:  {
-				self.summerwarsOprationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
-				self.summerwarsOprationView.alpha = 1.0
+				self.summerwarsOperationView.transform = CGAffineTransformMakeScale(1.0, 1.0)
+				self.summerwarsOperationView.alpha = 1.0
 			},
 			completion: {(bool: Bool) -> () in
 			}
@@ -225,20 +206,21 @@ public class SummerWarsViewController: UIViewController, UIScrollViewDelegate {
 		let offsetPoint:CGPoint = scrollView.contentOffset
 		
 		// how many distance from center point of scrollview
-		let dx = offsetPoint.x - ( summerwarsOprationView.frame.width - summerwarsScrollView.frame.width ) / 2.0
-		let dy = offsetPoint.y - ( summerwarsOprationView.frame.height - summerwarsScrollView.frame.height ) / 2.0
+		let dx = offsetPoint.x - ( summerwarsOperationView.frame.width - summerwarsScrollView.frame.width ) / 2.0
+		let dy = offsetPoint.y - ( summerwarsOperationView.frame.height - summerwarsScrollView.frame.height ) / 2.0
 		
 		for index in 0..<summerwarsViews.count {
-			if(index % 3 == 0){
+			if index % 3 == 0 {
 				summerwarsViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.52, dy * 0.32)
-			} else if(index % 3 == 1){
+			}
+            if index % 3 == 1 {
 				summerwarsViews[index].transform = CGAffineTransformMakeTranslation(dx * 0.26, dy * 0.24)
 			}
 		}
 	}
 	
 	public func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
-		return summerwarsOprationView
+		return summerwarsOperationView
 	}
 	
 	public func scrollViewWillBeginDragging(scrollView: UIScrollView) {
@@ -266,7 +248,7 @@ public class WarsContent {
 	public var image = UIImage()
 	public var caption = ""
 	
-	public init(image:UIImage, caption:String = "hello"){
+	public init(image:UIImage, caption:String = ""){
 		self.image = image
 		self.caption = caption
 	}
@@ -275,12 +257,12 @@ public class WarsContent {
 
 public class WarsView: UIView{
 	
-	var baseView: UIView!
-	var warImageView : UIImageView!
-	var warTitleLabel = UILabel()
-	var warTitleLabelBackground = UIControl()
-	var warColor:UIColor!
-	var isFocus = false
+	private var baseView: UIView!
+	private var warImageView : UIImageView!
+	private var warTitleLabel = UILabel()
+	private var warTitleLabelBackground = UIControl()
+	private var warColor:UIColor!
+	private var isFocus = false
 	
 	public required init(coder aDecoder: NSCoder) {
 		super.init(coder: aDecoder)!
@@ -288,10 +270,6 @@ public class WarsView: UIView{
 	
 	public override init(frame: CGRect) {
 		super.init(frame: frame)
-	}
-	
-	static func getMinCircleRadius() -> CGFloat {
-		return SummerwarsOptions.warsMaxRadius * 0.6
 	}
 	
 	func setWar(content: WarsContent) {
@@ -372,6 +350,13 @@ public class WarsView: UIView{
 }
 
 class SummerwarsScrollView: UIScrollView {
+    
+	private var emitter: CAEmitterLayer {
+		return layer as! CAEmitterLayer
+	}
+	
+	private var cell: CAEmitterCell!
+	private var shapes = ["star", "oval", "polygon", "triangle"]
 	
 	override class func layerClass() -> AnyClass {
 		return CAEmitterLayer.self
@@ -386,14 +371,14 @@ class SummerwarsScrollView: UIScrollView {
 		super.init(coder: aDecoder)
 		self.setup()
 	}
-	
-	private var emitter: CAEmitterLayer {
-		return layer as! CAEmitterLayer
+    
+	override func layoutSubviews() {
+		super.layoutSubviews()
+		emitter.emitterPosition = CGPointMake(contentSize.width/2, contentSize.height/2)
+		emitter.emitterSize = self.bounds.size
 	}
 	
-	private var cell: CAEmitterCell!
-	private var shapes = ["star", "oval", "polygon", "triangle"]
-	
+    // MARK: - setup
 	func setup() {
 		emitter.emitterMode = kCAEmitterLayerOutline
 		emitter.emitterShape = kCAEmitterLayerCircle
@@ -414,11 +399,6 @@ class SummerwarsScrollView: UIScrollView {
 		}
 	}
 	
-	override func layoutSubviews() {
-		super.layoutSubviews()
-		emitter.emitterPosition = CGPointMake(contentSize.width/2, contentSize.height/2)
-		emitter.emitterSize = self.bounds.size
-	}
 }
 
 extension CAEmitterCell {
