@@ -355,19 +355,26 @@ class SummerwarsScrollView: UIScrollView {
 		return layer as! CAEmitterLayer
 	}
 	
+    private let bundle: NSBundle!
 	private var cell: CAEmitterCell!
-	private var shapes = ["star", "oval", "polygon", "triangle"]
+	//private var shapes = ["star", "oval", "polygon", "triangle"]
+	private var shapes = ["SummerWars.bundle/images/star",
+                          "SummerWars.bundle/images/oval",
+                          "SummerWars.bundle/images/polygon",
+                          "SummerWars.bundle/images/triangle"]
 	
 	override class func layerClass() -> AnyClass {
 		return CAEmitterLayer.self
 	}
 	
 	override init(frame: CGRect) {
+        bundle = NSBundle(forClass: SummerwarsScrollView.self)
 		super.init(frame: frame)
 		self.setup()
 	}
 	
 	required init?(coder aDecoder: NSCoder) {
+        bundle = NSBundle(forClass: SummerwarsScrollView.self)
 		super.init(coder: aDecoder)
 		self.setup()
 	}
@@ -385,29 +392,30 @@ class SummerwarsScrollView: UIScrollView {
 		emitter.renderMode = kCAEmitterLayerOldestFirst
 		emitter.preservesDepth = true
 		emitter.emitterCells = []
-		
+        
+        let bundle =  NSBundle(forClass: SummerWarsViewController.self)
 		for _ in 0..<5{
-			emitter.emitterCells?.append(CAEmitterCell.fast(shapes[Int.random(max: shapes.count - 1)]))
+			emitter.emitterCells?.append(CAEmitterCell.fast(shapes[Int.random(max: shapes.count - 1)], bundle: bundle))
 		}
 		
 		for _ in 0..<15 {
-			emitter.emitterCells?.append(CAEmitterCell.middle(shapes[Int.random(max: shapes.count - 1)]))
+			emitter.emitterCells?.append(CAEmitterCell.middle(shapes[Int.random(max: shapes.count - 1)], bundle: bundle))
 		}
 		
 		for _ in 0..<30 {
-			emitter.emitterCells?.append(CAEmitterCell.slow(shapes[Int.random(max: shapes.count - 1)]))
+			emitter.emitterCells?.append(CAEmitterCell.slow(shapes[Int.random(max: shapes.count - 1)], bundle: bundle))
 		}
 	}
 	
 }
 
 extension CAEmitterCell {
-	class func fast(shape:String) -> CAEmitterCell {
+    class func fast(shape:String, bundle:NSBundle) -> CAEmitterCell {
 		let cell = CAEmitterCell()
-		cell.contents = UIImage(named: shape)!.CGImage
+        cell.contents = UIImage(named: shape, inBundle: bundle, compatibleWithTraitCollection: nil)!.CGImage
 		cell.color = randomColor(luminosity: .Light).CGColor
 		cell.birthRate = 1
-		cell.lifetime = 10
+		cell.lifetime = 15
 		cell.lifetimeRange = 5
 		cell.velocity = 60
 		cell.velocityRange = 65
@@ -416,12 +424,12 @@ extension CAEmitterCell {
 		cell.scaleSpeed = 0.06
 		return cell
 	}
-	class func middle(shape:String) -> CAEmitterCell {
+	class func middle(shape:String, bundle:NSBundle) -> CAEmitterCell {
 		let cell = CAEmitterCell()
-		cell.contents = UIImage(named: shape)!.CGImage
+        cell.contents = UIImage(named: shape, inBundle: bundle, compatibleWithTraitCollection: nil)!.CGImage
 		cell.color = randomColor(luminosity: .Light).CGColor
 		cell.birthRate = 1
-		cell.lifetime = 10
+		cell.lifetime = 15
 		cell.lifetimeRange = 5
 		cell.velocity = 40
 		cell.velocityRange = 45
@@ -430,12 +438,12 @@ extension CAEmitterCell {
 		cell.scaleSpeed = 0.06
 		return cell
 	}
-	class func slow(shape:String) -> CAEmitterCell {
+	class func slow(shape:String, bundle:NSBundle) -> CAEmitterCell {
 		let cell = CAEmitterCell()
 		cell.contents = UIImage(named: shape)!.CGImage
 		cell.color = randomColor(luminosity: .Light).CGColor
 		cell.birthRate = 1
-		cell.lifetime = 10
+		cell.lifetime = 15
 		cell.lifetimeRange = 5
 		cell.velocity = 20
 		cell.velocityRange = 25
@@ -451,5 +459,3 @@ extension Int {
 		return Int(arc4random_uniform(UInt32((max - min) + 1))) + min
 	}
 }
-
-

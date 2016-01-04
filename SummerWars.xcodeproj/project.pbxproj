@@ -13,6 +13,7 @@
 		898604331BFDA7630057D3B6 /* Hue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8986042F1BFDA7630057D3B6 /* Hue.swift */; };
 		89CA0C7D1BF1F0EE005D5F7D /* SummerWars.h in Headers */ = {isa = PBXBuildFile; fileRef = 89CA0C7C1BF1F0EE005D5F7D /* SummerWars.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		89CA0CAB1BF1F13D005D5F7D /* SummerWars.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89CA0CAA1BF1F13D005D5F7D /* SummerWars.swift */; };
+		89F7B23A1C3A7549001BBAF1 /* SummerWars.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 89F7B2391C3A7549001BBAF1 /* SummerWars.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		89CA0C7C1BF1F0EE005D5F7D /* SummerWars.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SummerWars.h; sourceTree = "<group>"; };
 		89CA0C7E1BF1F0EE005D5F7D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		89CA0CAA1BF1F13D005D5F7D /* SummerWars.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SummerWars.swift; sourceTree = "<group>"; };
+		89F7B2391C3A7549001BBAF1 /* SummerWars.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = SummerWars.bundle; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +73,7 @@
 				89CA0C7C1BF1F0EE005D5F7D /* SummerWars.h */,
 				89CA0C7E1BF1F0EE005D5F7D /* Info.plist */,
 				89CA0CAA1BF1F13D005D5F7D /* SummerWars.swift */,
+				89F7B2391C3A7549001BBAF1 /* SummerWars.bundle */,
 			);
 			path = SummerWars;
 			sourceTree = "<group>";
@@ -143,6 +146,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89F7B23A1C3A7549001BBAF1 /* SummerWars.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
